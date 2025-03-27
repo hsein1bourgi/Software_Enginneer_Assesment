@@ -1,0 +1,163 @@
+# PSEUDO-CODE / PROMPT LOGIC
+
+# 1) Initialize attributes if isReturningUser
+if isReturningUser == true:
+    # Load existing user data from database or session
+    loadExistingData(userName, userAge, livesAlone, etc.)
+    # For returning user, certain steps may be already filled
+    # e.g., userName != null => skip asking name
+else:
+    # brand new user => set all attributes to defaults
+    userName = null
+    userAge = null
+    guardianConsent = null
+    livesAlone = null
+    isVegetarian = null
+    isReligious = null
+    newsletterSubscription = null
+    userLanguage = null
+    interests = null
+    shippingAddress = null
+    shippingSpeed = null
+    serviceDate = null
+    premiumSupportEnabled = false
+    promoCode = null
+    promoCodeValid = false
+    confirmation = false
+    active = true
+
+# 2) COLLECT BASIC INFO
+# Check if userName is empty, if so, prompt user
+
+if userName == null:
+    prompt: "What is your name?"
+    userName = getUserInputString()
+    if userName is invalid:
+        re-prompt or handle error
+
+# Check if userAge is empty, if so, prompt user
+if userAge == null:
+    prompt: "What is your age?"
+    userAge = getUserInputInteger()
+    if userAge is invalid:
+        re-prompt or handle error
+    
+    # If under 18 => check guardian consent
+    if userAge < 18:
+        prompt: "Are you a guardian consenting? (yes/no)"
+        guardianInput = getUserYesNo()
+        if guardianInput == "no":
+            active = false
+            terminateFlow("Profile deactivated: No consent.")
+        else:
+            guardianConsent = true
+
+# 3) ASK LIFESTYLE QUESTIONS (SKIP IF ALREADY ANSWERED)
+
+if livesAlone == null:
+    prompt: "Do you live alone? (yes/no)"
+    livesAlone = parseYesNoToBoolean(getUserYesNo())
+
+if isVegetarian == null:
+    prompt: "Are you vegetarian? (yes/no)"
+    isVegetarian = parseYesNoToBoolean(getUserYesNo())
+
+if isReligious == null:
+    prompt: "Are you religious? (yes/no)"
+    isReligious = parseYesNoToBoolean(getUserYesNo())
+
+# 4) NEWSLETTER
+
+if newsletterSubscription == null:
+    prompt: "Would you like to subscribe to our newsletter? (yes/no)"
+    newsletterSubscription = parseYesNoToBoolean(getUserYesNo())
+
+# 5) LANGUAGE PREFERENCE
+
+if userLanguage == null:
+    prompt: "Which language do you prefer? (English, Spanish, French)"
+    userLanguage = getUserInputString()
+    if userLanguage not in [English, Spanish, French]:
+        userLanguage = "English"  # default
+
+# 6) USER INTEREST
+
+if interests == null:
+    prompt: "Are you interested in Product A, Product B, or Service X?"
+    interests = getUserInputString()
+    # Validate interests
+    if interests in ["Product A", "Product B"]:
+        # get shipping info
+        if shippingAddress == null:
+            prompt: "Please provide your shipping address."
+            shippingAddress = getUserInputString()
+        if shippingSpeed == null:
+            prompt: "Standard or Express shipping?"
+            shippingSpeed = getUserInputString()
+    else if interests == "Service X":
+        # get service date/time
+        if serviceDate == null:
+            prompt: "Please provide your preferred service date."
+            serviceDate = getUserInputString()
+        # optional time range
+        if serviceTimeRange == null:
+            prompt: "Any preferred time range?"
+            serviceTimeRange = getUserInputString()
+
+# 7) ADVANCED FEATURE CHECK (PREMIUM SUPPORT)
+
+promptMsg = "Would you like to enable premium support?"
+if isReturningUser == true and premiumSupportEnabled == true:
+    promptMsg = "You had premium support before. Keep it on? (yes/no)"
+
+prompt: promptMsg
+userResponse = getUserYesNo()
+premiumSupportEnabled = parseYesNoToBoolean(userResponse)
+
+# 8) PROMO CODE
+
+prompt: "Do you have a promo code? (yes/no)"
+hasPromo = getUserYesNo()
+if hasPromo == "yes":
+    while true:
+        prompt: "Please enter your promo code (format: 3 uppercase, 4 digits, 2 symbols, 3 lowercase)"
+        promoCode = getUserInputString()
+        if validatePromoCode(promoCode):
+            promoCodeValid = true
+            break
+        else:
+            prompt: "Invalid code. Try again or type SKIP."
+            nextAction = getUserInputString()
+            if nextAction == "SKIP":
+                promoCode = null
+                break
+
+# 9) SUMMARY & CONFIRMATION
+# Construct summary from all the collected data
+
+summary = """
+Name: {userName}
+Age: {userAge} (Guardian Consent: {guardianConsent})
+Lives Alone: {livesAlone}
+Vegetarian: {isVegetarian}
+Religious: {isReligious}
+Newsletter: {newsletterSubscription}
+Language: {userLanguage}
+Interests: {interests}
+Shipping Address: {shippingAddress}
+Shipping Speed: {shippingSpeed}
+Service Date: {serviceDate}
+Premium Support: {premiumSupportEnabled}
+Promo Code: {promoCode} (valid: {promoCodeValid})
+"""
+
+prompt: "Here is your information:\n" + summary + "\nConfirm? (yes/no)"
+confResponse = getUserYesNo()
+if confResponse == "yes":
+    confirmation = true
+    prompt: "Thank you! Your profile is complete."
+else:
+    # If rejection logic is not required by the task, we simply do not confirm
+    prompt: "Profile not confirmed. (End/loop logic could go here if needed.)"
+
+exit flow
